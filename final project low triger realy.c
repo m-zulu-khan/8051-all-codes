@@ -12,6 +12,7 @@ bit count = 0;
 int seconds = 59;
 int minutes = 0;
 int hour = 0;
+int k;
 
 void delay(unsigned int count) {
     int i, j;
@@ -68,13 +69,16 @@ void LCD_DisplayTime() {
     number[8] = '\0';
   
     LCD_Command(0xC0); 
-    LCD_String(number);
+
+    for (k=0; number[k]!= 0; k++) {
+        LCD_Char(number[k]);
+    }
 }
 
 void decrementHour() {
   //  hour--;
     if (hour <= 0) {
-        relay = 0;
+        P1 = 0x0F;
         while (1) {     
             LCD_Command(0xC0); 
             LCD_String(" Times Up ");
@@ -86,7 +90,7 @@ void decrementHour() {
 void decrementMinutes() {
  if(minutes <= 0)
  {
-  minutes = 59;
+  minutes = 60;
    hour--;
  }   
 				   minutes--;
@@ -96,9 +100,9 @@ void decrementMinutes() {
 }
 
 void decrementTime() {
-     if(minutes >0 || hour > 0){
-       relay = 1;
-			 seconds--;
+	 while(1){
+       P1 = 0x00;
+       seconds--;
 			 
   if (seconds <= 0) {
     seconds = 59;
@@ -107,13 +111,8 @@ void decrementTime() {
 		
     LCD_DisplayTime();
     delay(1000);
+
 }
-}
-void start_timer() {
-     // Activate relay when timer starts
-	while(1){
-        decrementTime();
-	}
 }
 
 void set_time() {
@@ -136,13 +135,17 @@ void set_time() {
             delay(1000);
         }
         
-        if (start == 0) {
-            start_timer();
+				 
+    if (start == 0 && minutes > 0 || start == 0 && hour > 0) {
+        decrementTime();
+	
         }
+				
     }
 }
 
 void main() {
+    
     P1 = 0x0F;  // Set P1.3, P1.2, P1.1, P1.0 high and the rest low
     LCD_Init();
     LCD_Command(0x80); 
